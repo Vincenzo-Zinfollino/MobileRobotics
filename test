@@ -1,0 +1,70 @@
+wget -qO - https://isaac.download.nvidia.com/isaac-ros/repos.key | sudo apt-key add -
+grep -qxF "deb https://isaac.download.nvidia.com/isaac-ros/release-3 $(lsb_release -cs) release-3.0" /etc/apt/sources.list || \
+echo "deb https://isaac.download.nvidia.com/isaac-ros/release-3 $(lsb_release -cs) release-3.0" | sudo tee -a /etc/apt/sources.list
+sudo apt-get update
+
+
+
+RUN  apt-get update \
+     && apt install ros-dev-tools
+
+
+
+RUN  apt update \
+    wget -qO - https://isaac.download.nvidia.com/isaac-ros/repos.key | apt-key add - grep -qxF "deb https://isaac.download.nvidia.com/isaac-ros/release-3 $(lsb_release -cs) release-3.0" /etc/apt/sources.list || \
+    echo "deb https://isaac.download.nvidia.com/isaac-ros/release-3 $(lsb_release -cs) release-3.0" |  tee -a /etc/apt/sources.list 
+
+RUN ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
+RUN apt update && apt -y install curl  \
+    curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null 
+
+
+
+RUN apt-get update\
+    && apt-get install -y --allow-downgrades libbrotli1=1.0.9-2build6
+
+RUN apt-get update \
+    && apt install ros-humble-desktop
+
+
+sudo docker run --name isaac-sim --entrypoint bash -it --runtime=nvidia --gpus all -e "ACCEPT_EULA=Y" --rm --network=host \
+    -e "PRIVACY_CONSENT=Y" \
+    -v ~/docker/isaac-sim/cache/kit:/isaac-sim/kit/cache:rw \
+    -v ~/docker/isaac-sim/cache/ov:/root/.cache/ov:rw \
+    -v ~/docker/isaac-sim/cache/pip:/root/.cache/pip:rw \
+    -v ~/docker/isaac-sim/cache/glcache:/root/.cache/nvidia/GLCache:rw \
+    -v ~/docker/isaac-sim/cache/computecache:/root/.nv/ComputeCache:rw \
+    -v ~/docker/isaac-sim/logs:/root/.nvidia-omniverse/logs:rw \
+    -v ~/docker/isaac-sim/data:/root/.local/share/ov/data:rw \
+    -v ~/docker/isaac-sim/documents:/root/Documents:rw \
+   sim-image
+   
+
+
+sudo docker run --name isaac-sim-default --entrypoint bash -it --runtime=nvidia --gpus all -e "ACCEPT_EULA=Y" --rm --network=host \
+    -e "PRIVACY_CONSENT=Y" \
+    -v ~/docker/isaac-sim/cache/kit:/isaac-sim/kit/cache:rw \
+    -v ~/docker/isaac-sim/cache/ov:/root/.cache/ov:rw \
+    -v ~/docker/isaac-sim/cache/pip:/root/.cache/pip:rw \
+    -v ~/docker/isaac-sim/cache/glcache:/root/.cache/nvidia/GLCache:rw \
+    -v ~/docker/isaac-sim/cache/computecache:/root/.nv/ComputeCache:rw \
+    -v ~/docker/isaac-sim/logs:/root/.nvidia-omniverse/logs:rw \
+    -v ~/docker/isaac-sim/data:/root/.local/share/ov/data:rw \
+    -v ~/docker/isaac-sim/documents:/root/Documents:rw \
+    nvcr.io/nvidia/isaac-sim
+
+    # ricorda prima di avviare il docker dare le autorizzazioni ad accedere al server grafico a tutti gli utenti con il comando --> xhost +local:
+    docker run --name nvidia-ros --entrypoint bash -it --runtime=nvidia --gpus all -e "ACCEPT_EULA=Y" --rm --network=host --ipc host  -e "PRIVACY_CONSENT=Y" --env=DISPLAY \
+    -v ~/Documenti/GitHub/Robotics2/IsaacSim-ros_workspaces-main/humble_ws:/opt/humble_ws:rw \
+    -v /tmp/.X11-unix:/tmp/.X11-unix \
+    nvidia-ros:v3 
+
+
+
+    #FOR zed CAMERA
+    #install the docker image  docker pull stereolabs/zed:4.2-runtime-cuda12.1-ubuntu22.04 
+
+
+    docker run --gpus all  --name zed-camera  --rm --network=host --ipc host  -v /tmp/.X11-unix:/tmp/.X11-unix --env=DISPLAY -it --privileged stereolabs/zed:4.2-devel-cuda12.1-ubuntu22.04
+    

@@ -54,6 +54,35 @@ RUN echo 'source /opt/ros/humble/setup.bash' >> /ros_entrypoint.sh
 RUN echo 'exec "$@"' >> /ros_entrypoint.sh
 RUN chmod +x /ros_entrypoint.sh
 
+RUN apt-get update && apt-get install git-lfs
+RUN git lfs install --skip-repo
+
+
+
+
+RUN apt -y update \
+    && apt install python3-genmsg \
+    && apt -y install gnupg wget \
+    && apt -y install software-properties-common  \
+    && apt-get install -y apt-transport-https \
+    && add-apt-repository universe 
+
+
+RUN  apt update \
+    wget -qO - https://isaac.download.nvidia.com/isaac-ros/repos.key | apt-key add - grep -qxF "deb https://isaac.download.nvidia.com/isaac-ros/release-3 $(lsb_release -cs) release-3.0" /etc/apt/sources.list || \
+    echo "deb https://isaac.download.nvidia.com/isaac-ros/release-3 $(lsb_release -cs) release-3.0" |  tee -a /etc/apt/sources.list 
+
+
+
+
+RUN  DEBIAN_FRONTEND=noninteractive  mkdir -p  /workspaces/isaac_ros-dev/src \
+    echo "export ISAAC_ROS_WS=${HOME}/workspaces/isaac_ros-dev/" >> .bashrc\
+    source ~/.bashrc
+
+RUN cd ${ISAAC_ROS_WS}/src && \
+    git clone -b release-3.2 https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_common.git isaac_ros_common
+
+RUN sudo apt-get install -y curl jq tar
 
 
 

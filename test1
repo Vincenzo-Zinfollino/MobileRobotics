@@ -1,0 +1,78 @@
+FROM nvcr.io/nvidia/isaac-sim:4.5.0
+
+FROM ros:humble
+
+ENV DEBIAN_FRONTEND noninteractive
+
+
+RUN apt -y update \
+    apt install python3-genmsg \
+    && apt -y install gnupg wget \
+    && apt -y install software-properties-common  \
+    && apt-get install -y apt-transport-https \
+    && add-apt-repository universe 
+
+
+RUN  apt update  \
+    wget -qO - https://isaac.download.nvidia.com/isaac-ros/repos.key | apt-key add - grep -qxF "deb https://isaac.download.nvidia.com/isaac-ros/release-3 $(lsb_release -cs) release-3.0" /etc/apt/sources.list || \
+    echo "deb https://isaac.download.nvidia.com/isaac-ros/release-3 $(lsb_release -cs) release-3.0" |  tee -a /etc/apt/sources.list 
+
+RUN apt update && apt -y -qq update && apt -y install curl  \
+    curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg &&\
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null 
+
+
+
+RUN apt-get update\
+    && apt-get install -y --allow-downgrades libbrotli1=1.0.9-2build6
+
+RUN apt-get update \
+    && apt install ros-humble-desktop
+
+    RUN NGC_ORG="nvidia"\
+    NGC_TEAM="isaac" \
+    PACKAGE_NAME="isaac_ros_apriltag"\
+    NGC_RESOURCE="isaac_ros_apriltag_assets"\
+    NGC_FILENAME="quickstart.tar.gz"\
+    MAJOR_VERSION=3\
+    MINOR_VERSION=2\
+    VERSION_REQ_URL="https://catalog.ngc.nvidia.com/api/resources/versions?orgName=$NGC_ORG&teamName=$NGC_TEAM&name=$NGC_RESOURCE&isPublic=true&pageNumber=0&pageSize=100&sortOrder=CREATED_DATE_DESC"\
+    AVAILABLE_VERSIONS=$(curl -s \
+        -H "Accept: application/json" "$VERSION_REQ_URL")\
+    LATEST_VERSION_ID=$(echo $AVAILABLE_VERSIONS | jq -r "\
+        .recipeVersions[]\
+        | .versionId as \$v\
+        | \$v | select(test(\"^\\\\d+\\\\.\\\\d+\\\\.\\\\d+$\"))\
+        | split(\".\") | {major: .[0]|tonumber, minor: .[1]|tonumber, patch: .[2]|tonumber}\
+        | select(.major == $MAJOR_VERSION and .minor <= $MINOR_VERSION)\
+        | \$v\
+        " | sort -V | tail -n 1\
+    )\
+    if [ -z "$LATEST_VERSION_ID" ]; then\
+        echo "No corresponding version found for Isaac ROS $MAJOR_VERSION.$MINOR_VERSION"\
+        echo "Found versions:"\
+        echo $AVAILABLE_VERSIONS | jq -r '.recipeVersions[].versionId'\
+    else\
+        mkdir -p ${ISAAC_ROS_WS}/isaac_ros_assets && \
+        FILE_REQ_URL="https://api.ngc.nvidia.com/v2/resources/$NGC_ORG/$NGC_TEAM/$NGC_RESOURCE/\
+    versions/$LATEST_VERSION_ID/files/$NGC_FILENAME" && \
+        curl -LO --request GET "${FILE_REQ_URL}" && \
+        tar -xf ${NGC_FILENAME} -C ${ISAAC_ROS_WS}/isaac_ros_assets && \
+        rm ${NGC_FILENAME}\
+    fi
+
+RUN  cd ${ISAAC_ROS_WS}/src/isaac_ros_common && \
+    ./scripts/run_dev.sh
+
+
+
+RUN source install/local_setup.bash 
+RUN  colcon build\
+    && rosdep install -i --from-path src --ignore-src  --rosdistro humble -r -y \
+    && source humble_ws/install/setup.bash
+
+
+
+    
+
+
