@@ -55,7 +55,7 @@ sudo docker run --name isaac-sim-default --entrypoint bash -it --runtime=nvidia 
     nvcr.io/nvidia/isaac-sim
 
     # ricorda prima di avviare il docker dare le autorizzazioni ad accedere al server grafico a tutti gli utenti con il comando --> xhost +local:
-    docker run --name nvidia-ros --entrypoint bash -it --runtime=nvidia --gpus all -e "ACCEPT_EULA=Y" --rm --network=host --ipc host  -e "PRIVACY_CONSENT=Y" --env=DISPLAY \
+    docker run --name nvidia-ros --privileged --entrypoint bash -it --runtime=nvidia --gpus all -e "ACCEPT_EULA=Y" --rm --network=host --ipc host  -e "PRIVACY_CONSENT=Y" --env=DISPLAY \
     -v ~/Documenti/GitHub/Robotics2/IsaacSim-ros_workspaces-main/humble_ws:/opt/humble_ws:rw \
     -v /tmp/.X11-unix:/tmp/.X11-unix \
     nvidia-ros:v3 
@@ -68,3 +68,15 @@ sudo docker run --name isaac-sim-default --entrypoint bash -it --runtime=nvidia 
 
     docker run --gpus all  --name zed-camera  --rm --network=host --ipc host  -v /tmp/.X11-unix:/tmp/.X11-unix --env=DISPLAY -it --privileged stereolabs/zed:4.2-devel-cuda12.1-ubuntu22.04
     
+
+
+
+    # quando fai partire il container esegui questi comandi altrimenti non funziona il ros bridge 
+    # il primo comando eseguilo cosi altrimenti non funziona 
+    export FASTRTPS_DEFAULT_PROFILES_FILE=/opt/humble_ws/fastdds.xml
+
+
+
+    source /opt/ros/humble/setup.sh
+
+    source install/local_setup.bash

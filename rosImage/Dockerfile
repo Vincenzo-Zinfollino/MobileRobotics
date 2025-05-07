@@ -839,5 +839,37 @@ RUN  source /opt/ros/humble/setup.bash \
     && colcon build \
     && source install/local_setup.bash 
 
+# ZCAM
+
+ARG UBUNTU_MAJOR=22
+ARG UBUNTU_MINOR=04
+ARG CUDA_MAJOR=12
+ARG CUDA_MINOR=6
+ARG CUDA_PATCH=3
+ARG ZED_SDK_MAJOR=4
+ARG ZED_SDK_MINOR=2
+ARG ZED_SDK_PATCH=3
+
+WORKDIR /opt/humble_ws
+
+COPY ZED_SDK_Ubuntu.run /opt/humble_ws/
+
+RUN   chmod +x ZED_SDK_Ubuntu.run\
+    && ./ZED_SDK_Ubuntu.run -- silent
+
+WORKDIR /opt/humble_ws/src
+RUN git clone https://github.com/stereolabs/zed-ros2-wrapper.git
+
+WORKDIR /opt/humble_ws
+RUN apt install ros-humble-zed-msgs -y\
+    &&   source /opt/ros/humble/setup.bash \
+    && rosdep update -y \
+    && rosdep install --from-paths src --ignore-src -r -y \
+    && rm -r install \
+    && rm -r build \
+    && rm -r log \
+    && colcon build --symlink-install --cmake-args=-DCMAKE_BUILD_TYPE=Release \
+    && echo source $(pwd)/install/local_setup.bash >> ~/.bashrc \
+    && source ~/.bashrc 
 
 
