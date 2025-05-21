@@ -75,8 +75,6 @@ sudo docker run --name isaac-sim-default --entrypoint bash -it --runtime=nvidia 
     # il primo comando eseguilo cosi altrimenti non funziona 
     export FASTRTPS_DEFAULT_PROFILES_FILE=/opt/humble_ws/fastdds.xml
 
-
-
     source /opt/ros/humble/setup.sh
 
     source install/local_setup.bash

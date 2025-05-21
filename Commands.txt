@@ -1,0 +1,66 @@
+
+
+1)  Execute the command 
+    
+    xhost +local: 
+
+2)  Run the docker Container 
+
+    docker run --name nvidia-ros --privileged --entrypoint bash -it --runtime=nvidia --gpus all -e "ACCEPT_EULA=Y" --rm --network=host --ipc host  -e "PRIVACY_CONSENT=Y" --env=DISPLAY \
+    -v ~/Documenti/GitHub/Robotics2/IsaacSim-ros_workspaces-main/humble_ws:/opt/humble_ws:rw \
+    -v /tmp/.X11-unix:/tmp/.X11-unix \
+    nvidia-ros:v4
+
+3) inside the docker container  file execute the commands
+
+
+    1) Enabling the fast DDS
+      
+        export FASTRTPS_DEFAULT_PROFILES_FILE=/opt/humble_ws/fastdds.xml
+
+            Verify the correct setting of the variable  FASTRTPS_DEFAULT_PROFILES_FILE with the command
+
+            echo $FASTRTPS_DEFAULT_PROFILES_FILE
+
+            it must be equal to the workspace 
+
+    2) Source the Ros Humble executable 
+
+         source /opt/ros/humble/setup.sh
+
+
+        N.B: If you are statring the container for the first time you could have an error on  the setuptools_scm package, when use the colcon build tool.
+            For remove the error you must disinstasall the new version of the package installed in the container with the command:
+
+            pip3 uninstall setuptools-scm
+
+            after the disinstallation, you must reinstall the older version that works with ROS Humble, with the command:
+
+            pip3 install setuptools==58.2.0
+
+           You can verify if the behavior of the building process is correct using the command
+
+            colcon build
+
+
+    
+    3) Source the Workspaces executables 
+
+       source install/local_setup.bash
+
+4 ) In the IsaacSim directroy run the command
+
+    ./isaac-sim.selector.sh
+
+5) Enjoy the software
+
+
+
+
+If you need to start another trminal with the docker container 
+
+    docker exec -it nvidia-ros bash
+
+    after that you must setup the envirorment variable FASTRTPS_DEFAULT_PROFILES_FILE
+
+

@@ -1,0 +1,18 @@
+{
+    "ros.distro": "humble",
+    "cmake.sourceDirectory": "/home/vincenzo/Documenti/GitHub/Robotics2/IsaacSim-ros_workspaces-main/humble_ws/src/custom_message",
+    "python.autoComplete.extraPaths": [
+        "/home/vincenzo/Documenti/GitHub/Robotics2/IsaacSim-ros_workspaces-main/humble_ws/install/isaac_ros_navigation_goal/lib/python3.10/site-packages",
+        "/home/vincenzo/Documenti/GitHub/Robotics2/IsaacSim-ros_workspaces-main/humble_ws/install/isaac_ros2_messages/local/lib/python3.10/dist-packages",
+        "/home/vincenzo/Documenti/GitHub/Robotics2/IsaacSim-ros_workspaces-main/humble_ws/install/differential_drive/lib/python3.10/site-packages",
+        "/home/vincenzo/Documenti/GitHub/Robotics2/IsaacSim-ros_workspaces-main/humble_ws/install/custom_message/local/lib/python3.10/dist-packages",
+        "/opt/ros/humble/lib/python3.12/site-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/vincenzo/Documenti/GitHub/Robotics2/IsaacSim-ros_workspaces-main/humble_ws/install/isaac_ros_navigation_goal/lib/python3.10/site-packages",
+        "/home/vincenzo/Documenti/GitHub/Robotics2/IsaacSim-ros_workspaces-main/humble_ws/install/isaac_ros2_messages/local/lib/python3.10/dist-packages",
+        "/home/vincenzo/Documenti/GitHub/Robotics2/IsaacSim-ros_workspaces-main/humble_ws/install/differential_drive/lib/python3.10/site-packages",
+        "/home/vincenzo/Documenti/GitHub/Robotics2/IsaacSim-ros_workspaces-main/humble_ws/install/custom_message/local/lib/python3.10/dist-packages",
+        "/opt/ros/humble/lib/python3.12/site-packages"
+    ]
+}

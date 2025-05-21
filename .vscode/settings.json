@@ -1,0 +1,5 @@
+{
+    "python.analysis.autoImportCompletions": true,
+    "ros.distro": "jazzy",
+    "cmake.sourceDirectory": "/home/vincenzo/Documenti/GitHub/Robotics2/Zed-camera/Src Packet/zed-ros2-interfaces"
+}
