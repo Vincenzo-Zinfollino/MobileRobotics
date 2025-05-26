@@ -40,7 +40,7 @@ class CartesianController(Node):
         error_x = x_d-x_c
         error_y = y_d-y_c
 
-        angle_targhet=np.atan2(error_y,error_x)-theta_c  #+np.pi
+        angle_targhet=np.atan2(error_y,error_x)-theta_c  #+np.pi #wryyy
 
         return float(angle_targhet)
 
