@@ -26,13 +26,13 @@
 
     2) Source the Ros Humble executable 
 
-         source /opt/ros/humble/setup.sh
+        source /opt/ros/humble/setup.sh
 
 
         N.B: If you are statring the container for the first time you could have an error on  the setuptools_scm package, when use the colcon build tool.
             For remove the error you must disinstasall the new version of the package installed in the container with the command:
 
-            pip3 uninstall setuptools-scm
+            pip3 uninstall -y setuptools-scm
 
             after the disinstallation, you must reinstall the older version that works with ROS Humble, with the command:
 
