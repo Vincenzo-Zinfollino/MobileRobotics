@@ -15,6 +15,9 @@ class CartesianController(Node):
         self.y_position=float(0)
         self.theta_orientation=float(0)
 
+        self.x_targhet=float(10)
+        self.y_targhet=float(10)
+        
         
 
         super().__init__("CartesianController")
@@ -24,8 +27,9 @@ class CartesianController(Node):
         self.linear_velocity_pub=self.create_publisher(Float64,"linear_velocity",10)
         self.angular_velocity_pub=self.create_publisher(Float64,"angular_velocity",10)
 
-        #The topic /robot-position is directly published from Isaac_sim
+        #The topic /robot-position is directly published from Isaac_sim angle_targhet=np.atan2(error_x,error_y)-theta_c  #+np.pi #wryyy
         self.pose_sub= self.create_subscription(Pose, "/robot_position" ,self.pose_callback,10)
+        self.targhet_sub=self.create_subscription(Pose,"/targhrt_position",self.targhet_pose_callback,10)
         
         #DEBUG
         self.count = 0 
@@ -39,8 +43,8 @@ class CartesianController(Node):
 
         error_x = x_d-x_c
         error_y = y_d-y_c
-
-        angle_targhet=np.atan2(error_y,error_x)-theta_c  #+np.pi #wryyy
+        
+        angle_targhet=np.atan2(error_y,error_x)-theta_c #-(np.pi) #wryyy
 
         return float(angle_targhet)
 
@@ -70,17 +74,22 @@ class CartesianController(Node):
 
         #debug
 
-        self.get_logger().info("Position recived "+"x :"+str( self.x_position)+" y :"+str( self.y_position)+"theta :"+str( (self.theta_orientation*180)/np.pi))
+        #self.get_logger().info("Position recived "+"x :"+str( self.x_position)+" y :"+str( self.y_position)+"theta :"+str( (self.theta_orientation*180)/np.pi))
 
+    def targhet_pose_callback(self,pose:Pose):
+         
+         self.x_targhet=pose.position.x
+         self.y_targhet=pose.position.y
+         #self.get_logger().info(" call targhet Position x:" + str(self.x_targhet) +" y : "+ str(self.y_targhet))
+    
+    
     def timer_callback(self):
          
-        x_targhet =-15
-        y_targhet =-10
 
         k_linear = 0.4
         k_angular = 0.8
 
-        v,w =self.controller(x_targhet,y_targhet,k_linear,k_angular)
+        v,w =self.controller(self.x_targhet,self.y_targhet,k_linear,k_angular)
         
         #self.get_logger().info("Action Computed  Linear: v= "+ str(v) +" Angualr: w= " +str(w) )
         
@@ -108,18 +117,21 @@ class CartesianController(Node):
         gamma=self.angular_error(self.x_position,self.y_position,self.theta_orientation,x_desired,y_desired)
         delta= gamma+self.theta_orientation
         
-        k1=0.5
-        k2=0.9
-        k3=0.5
+        k1=50
+        k2=50 #0.5
+        k3=50
 
-        v= k1*rho*np.cos(gamma)
-        w= k2*gamma +k1*((np.sin(gamma)*np.cos(gamma))/gamma)+(gamma+k3*delta)
-
+        if (rho>0.001):
+            v= k1*rho*np.cos(gamma)
+            w= k2*gamma +k1*((np.sin(gamma)*np.cos(gamma))/gamma)+(gamma+k3*delta)
+        else:
+            v=0.0
+            w=0.0
         
         
 
         #DEBUG
-        #self.get_logger().info("  Linear ERROR= "+ str( self.linear_error(self.x_position,self.y_position,x_desired,y_desired) ) +" Angualr: ERROR = " +str(self.angular_error(self.x_position,self.y_position,self.theta_orientation,x_desired,y_desired)) )
+        self.get_logger().info("  Linear ERROR= "+ str( self.linear_error(self.x_position,self.y_position,x_desired,y_desired) ) +" Angualr: ERROR = " +str(self.angular_error(self.x_position,self.y_position,self.theta_orientation,x_desired,y_desired)) )
 
         
 
