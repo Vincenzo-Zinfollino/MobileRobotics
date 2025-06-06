@@ -2,23 +2,43 @@
 #! /usr/bin/env python
 
 import rclpy 
-from rclpy.node import Node
+import rclpy.exceptions
+
+import matplotlib.pyplot as plt
+
+#from rclpy.node import Node
+from rclpy.lifecycle import State, TransitionCallbackReturn, LifecycleNode
+
+
 from example_interfaces.msg import Float64 
 from geometry_msgs.msg import  Pose
 
 import numpy as np 
 
-class CartesianController(Node):
+import csv
+import datetime
+
+class CartesianController(LifecycleNode):
     def __init__(self):
 
         self.x_position=float(0)
         self.y_position=float(0)
         self.theta_orientation=float(0)
 
+        self.x_position_list=[]
+        self.y_position_list=[]
+        self.theta_position_list=[]
+
+        self.v_list=[]
+        self.w_list=[]
+
+        self.linear_error_list=[]
+        self.angular_error_list=[]
+
+
         self.x_targhet=float(10)
         self.y_targhet=float(10)
-        
-        
+       
 
         super().__init__("CartesianController")
         self.get_logger().info("Start Cartesian Controller")
@@ -33,6 +53,83 @@ class CartesianController(Node):
         
         #DEBUG
         self.count = 0 
+
+
+    def on_shutdown(self, state):
+
+        self.get_logger().info("Lifecycle ShutDown")
+
+        #fields=[ 'x' , 'y' , 'theta' , 'linear_error' ,'angular_error' ,'v', 'w']
+
+        state=[ self.x_position_list, self.y_position_list ,self.theta_position_list, self.linear_error_list , self.angular_error_list , self.v_list , self.w_list]
+     
+        now=datetime.datetime.now()
+        filename= "Simulation_output " + str(now.year) + "-"+str(now.month) +"-"+str(now.day) + " " +str(now.hour)+":"+str(now.minute)+" x_t =" +str(self.x_targhet) + "y_t ="+str(self.y_targhet)                
+
+        with open(str(filename + ".csv" ),'w',newline='') as csvfile:
+            writer=csv.writer(csvfile)
+            writer.writerows(state)
+
+        
+
+        plt.figure()
+        plt.plot(self.x_position_list,self.y_position_list)
+        plt.grid(visible=True)
+        plt.savefig(str("image/Trajectory"+filename+".png"))
+        plt.close()
+
+        plt.figure()
+        t=[i for i in range(len(self.angular_error_list))]
+        plt.plot(t,self.angular_error_list)
+        plt.grid(visible=True)
+        plt.savefig(str("image/Angular_Error"+filename+".png"))
+        plt.close()
+
+        plt.figure()
+        t=[i for i in range(len(self.theta_position_list))]
+        plt.plot(t,self.theta_position_list)
+        plt.grid(visible=True)
+        plt.savefig(str("image/theta"+filename+".png"))
+        plt.close()
+
+
+
+
+        plt.figure()
+        t=[i for i in range(len(self.linear_error_list))]
+        plt.plot(t,self.linear_error_list)
+        plt.grid(visible=True)
+        plt.savefig(str("image/Linear_Error"+filename+".png"))
+        plt.close()
+
+        plt.figure()
+        t=[i for i in range(len(self.w_list))]
+        plt.plot(t,self.w_list)
+        plt.grid(visible=True)
+        plt.savefig(str("image/Angular_Velocity_Actuation"+filename+".png"))
+        plt.close()
+
+        plt.figure()
+        t=[i for i in range(len(self.v_list))]
+        plt.plot(t,self.v_list)
+        plt.grid(visible=True)
+        plt.savefig(str("image/linear_Velocity_Actuation"+filename+".png"))
+        plt.close()
+
+        plt.figure()
+        t=[i for i in range(len(self.v_list))]
+        t1=t=[i for i in range(len(self.w_list))]
+        plt.plot(t,self.v_list, label="v")
+        plt.plot(t1,self.w_list,label="w")
+        plt.grid(visible=True)
+        plt.savefig(str("image/Angular_VS_linear_Velocity_Actuation"+filename+".png"))
+        plt.close()
+
+
+
+        return TransitionCallbackReturn.SUCCES
+
+
         
 
     def linear_error(self,x_measured,y_measured,x_d,y_d):
@@ -43,8 +140,10 @@ class CartesianController(Node):
 
         error_x = x_d-x_c
         error_y = y_d-y_c
-        
-        angle_targhet=np.atan2(error_y,error_x)-theta_c #-(np.pi) #wryyy
+ 
+        #angle_targhet=np.atan2(error_y,error_x)-theta_c #+(np.pi) #wryyy
+
+        angle_targhet=np.atan2(error_y,error_x)
 
         return float(angle_targhet)
 
@@ -54,8 +153,8 @@ class CartesianController(Node):
 
         self.x_position=pose.position.x
         self.y_position=pose.position.y
-        quaternion_z=0
-        quaternion_w=0
+        #quaternion_z=0
+        #quaternion_w=0
         
         quaternion_x=pose.orientation.x
         quaternion_y=pose.orientation.y
@@ -72,6 +171,12 @@ class CartesianController(Node):
 
         self.theta_orientation=np.atan2(siny_cosp,cosy_cosp) # the orientation of the robot is defined  as the rotetion around the z axis
 
+
+        #Saving for log
+        self.x_position_list.append(float(self.x_position))
+        self.y_position_list.append(float(self.y_position))
+        self.theta_position_list.append(float(self.theta_orientation))
+
         #debug
 
         #self.get_logger().info("Position recived "+"x :"+str( self.x_position)+" y :"+str( self.y_position)+"theta :"+str( (self.theta_orientation*180)/np.pi))
@@ -81,6 +186,9 @@ class CartesianController(Node):
          self.x_targhet=pose.position.x
          self.y_targhet=pose.position.y
          #self.get_logger().info(" call targhet Position x:" + str(self.x_targhet) +" y : "+ str(self.y_targhet))
+
+       
+
     
     
     def timer_callback(self):
@@ -113,15 +221,19 @@ class CartesianController(Node):
         #w=float(k_angular)*self.angular_error(self.x_position,self.y_position,self.theta_orientation,x_desired,y_desired)
 
         #Polar Cartesian controller 
+        #rho=self.linear_error(self.x_position,self.y_position,x_desired,y_desired)
+        #gamma=self.angular_error(self.x_position,self.y_position,self.theta_orientation,x_desired,y_desired)
+        #delta= gamma+self.theta_orientation 
+
         rho=self.linear_error(self.x_position,self.y_position,x_desired,y_desired)
-        gamma=self.angular_error(self.x_position,self.y_position,self.theta_orientation,x_desired,y_desired)
+        gamma=self.angular_error(self.x_position,self.y_position,self.theta_orientation,x_desired,y_desired)-self.theta_orientation
         delta= gamma+self.theta_orientation
         
-        k1=50
-        k2=50 #0.5
-        k3=50
+        k1=20#60
+        k2=20#50 #0.5
+        k3=28#40
 
-        if (rho>0.001):
+        if (rho>0.092 ):
             v= k1*rho*np.cos(gamma)
             w= k2*gamma +k1*((np.sin(gamma)*np.cos(gamma))/gamma)+(gamma+k3*delta)
         else:
@@ -129,9 +241,14 @@ class CartesianController(Node):
             w=0.0
         
         
-
+        #Saving for log
+        self.v_list.append(float(v))
+        self.w_list.append(float(w))
+        self.linear_error_list.append(float(rho))
+        self.angular_error_list.append(float(delta))
+         
         #DEBUG
-        self.get_logger().info("  Linear ERROR= "+ str( self.linear_error(self.x_position,self.y_position,x_desired,y_desired) ) +" Angualr: ERROR = " +str(self.angular_error(self.x_position,self.y_position,self.theta_orientation,x_desired,y_desired)) )
+        self.get_logger().info("  Linear ERROR= "+ str( self.linear_error(self.x_position,self.y_position,x_desired,y_desired) ) +" Angualr: ERROR = " +str(delta) )
 
         
 
@@ -144,8 +261,14 @@ def main (args=None):
     
     rclpy.init(args=args)
     node = CartesianController()
+
+   
     rclpy.spin(node)
+    
+    
+
     rclpy.shutdown()
+    
 
 
 if __name__== '__main__':
